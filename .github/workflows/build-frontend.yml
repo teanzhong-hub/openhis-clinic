@@ -28,10 +28,10 @@ jobs:
           node -v
           npm -v
 
-      - name: Install dependencies
-        run: |
-          npm install -g yarn@1.22.22
-          yarn install --frozen-lockfile --non-interactive
+     - name: Install dependencies
+  run: |
+    yarn --version
+    yarn install --frozen-lockfile --non-interactive
 
       - name: Build frontend
         run: npm run build
