@@ -18,9 +18,9 @@
             </el-button>
           </el-input>
         </el-row>
-        <!-- <el-row>
-                    <el-button style="width:100%;">快速接诊</el-button>
-                </el-row> -->
+        <el-row style="margin-top: 10px;">
+          <el-button type="primary" plain style="width:100%;" @click="startInstantVisit">快速接诊</el-button>
+        </el-row>
         <el-row>
           <el-tabs v-model="TodayActiveName" @tab-click="handlePatientClick" stretch="true">
             <el-tab-pane name="prepare">
@@ -242,7 +242,8 @@
                       v-model="BasicInfoModel.name"
                       style="width:100px"
                     ></el-input> -->
-                    <div class="nameStyle">
+                    <el-input v-if="isInstant === 1" v-model.trim="BasicInfoModel.name" placeholder="患者姓名" />
+                    <div v-else class="nameStyle">
                       {{ BasicInfoModel.name ? BasicInfoModel.name : "" }}
                       <div class="imgStyle" v-if="member.length > 0">
                         <el-popover placement="top-start" title="" width="200" trigger="hover">
@@ -270,7 +271,11 @@
                       <el-option label="男" value="男"></el-option>
                       <el-option label="女" value="女"></el-option>
                     </el-select> -->
-                    <span>
+                    <el-select v-if="isInstant === 1" v-model="BasicInfoModel.gender.name" placeholder="请选择性别" style="width:100%">
+                      <el-option label="男" value="男"></el-option>
+                      <el-option label="女" value="女"></el-option>
+                    </el-select>
+                    <span v-else>
 											{{
                         BasicInfoModel.gender.name
                           ? BasicInfoModel.gender.name
@@ -297,7 +302,11 @@
                     >
                       <template slot="append">月</template>
                     </el-input> -->
-                    <span>
+                    <div v-if="isInstant === 1" style="display:flex;gap:4px">
+                      <el-input v-model="BasicInfoModel.age" placeholder="岁" />
+                      <el-input v-model="BasicInfoModel.month" placeholder="月" />
+                    </div>
+                    <span v-else>
 											{{ BasicInfoModel.age ? BasicInfoModel.age : 0 }}岁{{
                         BasicInfoModel.month ? BasicInfoModel.month : 0
                       }}月
@@ -310,7 +319,8 @@
                       :disabled="isBaseReadOnly"
                       v-model="BasicInfoModel.phone"
                     ></el-input> -->
-                    <span>
+                    <el-input v-if="isInstant === 1" v-model.trim="BasicInfoModel.phone" placeholder="联系方式" />
+                    <span v-else>
 											{{ BasicInfoModel.phone ? BasicInfoModel.phone : "" }}
 										</span>
                   </el-form-item>
@@ -321,7 +331,8 @@
                       :disabled="isBaseReadOnly"
                       v-model="BasicInfoModel.card"
                     ></el-input> -->
-                    <span>
+                    <el-input v-if="isInstant === 1" v-model.trim="BasicInfoModel.card" placeholder="身份证号" />
+                    <span v-else>
 											{{ BasicInfoModel.card ? BasicInfoModel.card : "" }}
 										</span>
                   </el-form-item>
@@ -1993,7 +2004,7 @@
           <el-button type="primary" v-if="!isReadOnly && TodayActiveName == 'already'" @click="save(2)">保存
           </el-button>
           <el-button type="primary" v-if="hasBtnPrint" @click="print">打印</el-button>
-          <el-button v-show="hasBtnFinishVisit" type="primary" @click="save(1)">完成接诊</el-button>
+          <el-button v-show="hasBtnFinishVisit" type="primary" @click="isInstant === 1 ? FinishVisit() : save(1)">完成接诊</el-button>
         </div>
       </el-card>
     </el-main>
@@ -5755,6 +5766,19 @@
         this.overColor = index;
       },
       clickPreparePatient(item, index) {
+        if (this.isInstant === 1) {
+          this.$confirm("快速接诊尚未完成，切换患者将丢失未保存的数据，确定继续吗？", "提示", {
+            confirmButtonText: "确定切换",
+            cancelButtonText: "继续接诊",
+            type: "warning"
+          }).then(() => {
+            this.isInstant = 0;
+            this.hint = false;
+            this.clickPreparePatient(item, index);
+          }).catch(() => {});
+          return;
+        }
+        this.isInstant = 0;
         // if(item.id===this.clickId){
         //   return
         // }
@@ -7709,7 +7733,51 @@
 
         this.payAmount = fullAmount;
       },
+      startInstantVisit() {
+        this.$prompt("请输入患者姓名", "快速接诊", {
+          confirmButtonText: "开始接诊",
+          cancelButtonText: "取消",
+          inputPattern: /\S+/,
+          inputErrorMessage: "患者姓名不能为空"
+        }).then(({ value }) => {
+          this.isInstant = 1;
+          this.BasicInfoModel = {
+            name: value.trim(),
+            gender: { name: "" },
+            age: "",
+            month: "",
+            phone: "",
+            card: "",
+            withPatientNexus: { name: "" },
+            healthCardNo: "",
+            pulse: "",
+            breathe: "",
+            temperature: ""
+          };
+          this.MedicalRecordModel = this.ReturnMedicalModel();
+          this.registration = JSON.parse(JSON.stringify(this.MedicalRecordModel.registration));
+          this.medicalEditTabs = [];
+          this.isReadOnly = false;
+          this.isBaseReadOnly = false;
+          this.hasBtnFinishVisit = true;
+          this.hasBtnPrint = false;
+          this.hint = false;
+          this.$message.success("已进入快速接诊，请填写病历后完成接诊");
+        }).catch(() => {});
+      },
       FinishVisit() {
+        if (this.savelock) {
+          this.$message.warning("正在保存，请勿重复提交");
+          return;
+        }
+        if (this.isInstant !== 1) {
+          this.$message.error("当前不是快速接诊模式");
+          return;
+        }
+        if (!this.BasicInfoModel.name || !this.BasicInfoModel.name.trim()) {
+          this.$message.error("请填写患者姓名");
+          return;
+        }
         let FormCheck = true;
         this.$refs["BasicInfoForm"].validate((valid) => {
           if (valid) {
@@ -7731,7 +7799,9 @@
         let returnForEach = false;
         let hasSelsmallType = false;
         let numberCheck = false;
-        if (this.medicalEditTabs.length == 0) {
+        // 快速接诊允许仅保存病历，不强制开具处方
+        // 如有处方，仍执行下方的处方完整性校验
+        if (this.medicalEditTabs.length == 0 && this.isInstant !== 1) {
           this.$message.error("处方数量不能为0");
           return;
         }
@@ -7788,18 +7858,25 @@
         console.log(medicalRecipelEvt);
         let formData = new FormData();
         formData.append("entity", JSON.stringify(medicalRecipelEvt));
-        this.hint = false;
+        this.savelock = true;
         allSaveMedicalRecord(formData).then((responseData) => {
           if (responseData.code == 100) {
             this.$message.success("操作成功！");
             this.hasBtnFinishVisit = false;
             this.hasBtnPrint = false;
             this.isReadOnly = true;
+            this.isBaseReadOnly = true;
+            this.isInstant = 0;
+            this.hint = false;
             this.GetPreparePatientList();
             this.GetAlreadyPatientList();
           } else {
             this.$message.error("完成接诊失败！");
           }
+        }).catch(() => {
+          this.$message.error("保存请求失败，请检查网络或服务器");
+        }).then(() => {
+          this.savelock = false;
         });
       },
       invalidMedical() {
