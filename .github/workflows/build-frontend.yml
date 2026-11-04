@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     container:
@@ -27,11 +27,11 @@ jobs:
         run: |
           node -v
           npm -v
+          yarn --version
 
-     - name: Install dependencies
-  run: |
-    yarn --version
-    yarn install --frozen-lockfile --non-interactive
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile --non-interactive
 
       - name: Build frontend
         run: npm run build
