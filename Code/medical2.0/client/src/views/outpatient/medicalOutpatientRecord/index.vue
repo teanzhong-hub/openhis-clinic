@@ -7302,15 +7302,11 @@
                       .toNumber()).toFixed(2);
                   } else {
                     rowElement.unitPrice = rowElement.drugStuffId.price;
-                    rowElement.total = BigNumber(
-                      Math.ceil(
-                        BigNumber(total)
-                          .dividedBy(rowElement.drugStuffId.drug.preparation)
-                          .toNumber()
-                      )
-                    )
-                      .multipliedBy(rowElement.drugStuffId.drug.preparation)
-                      .toNumber();
+                    rowElement.total = Math.ceil(
+                      BigNumber(total)
+                        .dividedBy(rowElement.drugStuffId.drug.preparation)
+                        .toNumber()
+                    );
                     rowElement.allFee = BigNumber(
                       Math.ceil(
                         BigNumber(total)
@@ -7323,7 +7319,12 @@
                   }
                 }
                 if (
-                  rowElement.drugStuffId.surplusStock < rowElement.total &&
+                  rowElement.drugStuffId.surplusStock <
+                    (String(rowElement.isUnpackSell) === "1"
+                      ? Number(rowElement.total)
+                      : BigNumber(rowElement.total)
+                          .multipliedBy(rowElement.drugStuffId.drug.preparation)
+                          .toNumber()) &&
                   !this.isReadOnly &&
                   tabElement.content.recipelInfo.dispensionStatus == 0
                 ) {
