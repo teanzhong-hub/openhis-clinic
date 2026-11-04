@@ -31,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile --non-interactive
+          yarn install --non-interactive --non-interactive
 
       - name: Build frontend
         run: npm run build
