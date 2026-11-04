@@ -5919,14 +5919,18 @@
           }
         });
 
-        let isFollowUp =
-          this.MedicalRecordModel.registration.treatType.value === "treatType_0" ?
-            0 :
-            1;
-        let isFollowUpTo =
-          this.MedicalRecordModel.registration.infectType.value === "infectType_0" ?
-            0 :
-            1;
+        const registration = this.registration;
+        const treatType = registration && registration.treatType && registration.treatType.value;
+        const infectType = registration && registration.infectType && registration.infectType.value;
+
+        if (!["treatType_0", "treatType_1"].includes(treatType) ||
+            !["infectType_0", "infectType_1"].includes(infectType)) {
+          this.$message.error("当前患者挂号信息不完整，请核对初诊/复诊及传染病状态");
+          return;
+        }
+
+        let isFollowUp = treatType === "treatType_0" ? 0 : 1;
+        let isFollowUpTo = infectType === "infectType_0" ? 0 : 1;
         let recipelInfoEvt = {};
         if (tabType == "recipelType_1") {
           recipelInfoEvt = {
