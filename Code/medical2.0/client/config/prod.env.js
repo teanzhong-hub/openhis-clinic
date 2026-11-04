@@ -1,7 +1,7 @@
 'use strict'
 module.exports = {
   NODE_ENV: '"production"',
-   BASE_API: '"http://61.172.179.73:5003/lease-backend-test"',
+   BASE_API: '"/lease-backend-test"',
   // WEB_SOCKET_URL:'"ws://localhost:7020/lease-backend-test/websocket/"',
   // BASE_API: '"http://192.168.10.201:7020/lease-backend-test"',
   // WEB_SOCKET_URL:'"ws://192.168.10.201:7020/lease-backend-test/websocket/"',
