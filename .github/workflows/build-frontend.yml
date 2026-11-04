@@ -1,0 +1,48 @@
+
+name: Build OpenHIS Clinic Frontend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    container:
+      image: node:14-bullseye
+
+    defaults:
+      run:
+        working-directory: Code/medical2.0/client
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Show Node version
+        run: |
+          node -v
+          npm -v
+
+      - name: Install dependencies
+        run: |
+          npm install -g yarn@1.22.22
+          yarn install --frozen-lockfile --non-interactive
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify output
+        run: test -f dist/index.html
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: openhis-clinic-dist
+          path: Code/medical2.0/client/dist/
+          if-no-files-found: error
+          retention-days: 7
