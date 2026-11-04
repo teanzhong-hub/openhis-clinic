@@ -30,8 +30,8 @@ jobs:
           yarn --version
 
       - name: Install dependencies
-        run: |
-          yarn install --non-interactive --non-interactive
+        run: 
+         yarn install --non-interactive --ignore-engines
 
       - name: Build frontend
         run: npm run build
